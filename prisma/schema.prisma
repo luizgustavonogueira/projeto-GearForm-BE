@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// MODELO USUARIO (completo para a rubrica)
+// ============================================
+
+model usuario {
+  id        Int      @id @default(autoincrement())
+  nome      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(100)
+  senha     String   @db.VarChar(255)
+  cpf       String   @unique @db.VarChar(14)
+  status    String?  @default("ativo") @db.VarChar(20)
+  ultimo_acesso DateTime?
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  matriculas matricula[]
+  progresso  progresso[]
+  
+  @@map("usuarios")
+}
+
+// ============================================
+// MODELO CURSO
+// ============================================
+
+model curso {
+  id           Int      @id @default(autoincrement())
+  nome_curso   String   @db.VarChar(255)
+  descricao    String?  @db.Text
+  categoria    String?  @db.VarChar(100)
+  duracao_total Int?
+  certificado  Boolean? @default(false)
+  imagem_capa  String?  @db.VarChar(500)
+  created_at   DateTime @default(now()) @map("created_at")
+  updated_at   DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  modulos    modulo[]
+  matriculas matricula[]
+  
+  @@map("curso")
+}
+
+// ============================================
+// MODELO MODULO
+// ============================================
+
+model modulo {
+  id         Int      @id @default(autoincrement())
+  curso_id   Int
+  titulo     String   @db.VarChar(255)
+  ordem      Int
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  curso curso   @relation(fields: [curso_id], references: [id], onDelete: Cascade)
+  aulas aula[]
+  
+  @@map("modulos")
+}
+
+// ============================================
+// MODELO AULA
+// ============================================
+
+model aula {
+  id         Int      @id @default(autoincrement())
+  modulo_id  Int
+  titulo     String   @db.VarChar(255)
+  tipo       String?  @default("video") @db.VarChar(20)
+  conteudo   String?  @db.Text
+  url_video  String?  @db.VarChar(500)
+  ordem      Int
+  created_at DateTime @default(now()) @map("created_at")
+  updated_at DateTime @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  modulo     modulo     @relation(fields: [modulo_id], references: [id], onDelete: Cascade)
+  questoes   questao[]
+  progresso  progresso[]
+  
+  @@map("aulas")
+}
+
+// ============================================
+// MODELO MATRICULA
+// ============================================
+
+model matricula {
+  id             Int       @id @default(autoincrement())
+  usuario_id     Int
+  curso_id       Int
+  status         String?   @default("ativo") @db.VarChar(20)
+  progresso      Decimal?  @default(0) @db.Decimal(5,2)
+  data_matricula DateTime? @default(now())
+  created_at     DateTime  @default(now()) @map("created_at")
+  updated_at     DateTime  @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  usuario usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  curso   curso   @relation(fields: [curso_id], references: [id], onDelete: Cascade)
+  
+  @@unique([usuario_id, curso_id])
+  @@map("matriculas")
+}
+
+// ============================================
+// MODELO PROGRESSO
+// ============================================
+
+model progresso {
+  id         Int       @id @default(autoincrement())
+  usuario_id Int
+  aula_id    Int
+  status     String?   @default("nao_iniciado") @db.VarChar(20)
+  created_at DateTime  @default(now()) @map("created_at")
+  updated_at DateTime  @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  usuario usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  aula    aula    @relation(fields: [aula_id], references: [id], onDelete: Cascade)
+  
+  @@unique([usuario_id, aula_id])
+  @@map("progresso")
+}
+
+// ============================================
+// MODELO QUESTAO
+// ============================================
+
+model questao {
+  id         Int       @id @default(autoincrement())
+  aula_id    Int
+  pergunta   String    @db.Text
+  tipo       String?   @default("multipla_escolha") @db.VarChar(20)
+  created_at DateTime  @default(now()) @map("created_at")
+  updated_at DateTime  @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  aula   aula             @relation(fields: [aula_id], references: [id], onDelete: Cascade)
+  opcoes opcoes_resposta[]
+  
+  @@map("questoes")
+}
+
+// ============================================
+// MODELO OPCOES_RESPOSTA
+// ============================================
+
+model opcoes_resposta {
+  id          Int       @id @default(autoincrement())
+  questao_id  Int
+  opcao_texto String    @db.Text
+  correta     Boolean?  @default(false)
+  created_at  DateTime  @default(now()) @map("created_at")
+  updated_at  DateTime  @updatedAt @map("updated_at")
+  
+  // Relacionamentos
+  questao questao @relation(fields: [questao_id], references: [id], onDelete: Cascade)
+  
+  @@map("opcoes_respostas")
+}

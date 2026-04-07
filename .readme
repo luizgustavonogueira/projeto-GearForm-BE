@@ -1,0 +1,8 @@
+Projeto migrado para TypeScript
+Feito a estrutura em camadas 
+Implementação de cadastro com validações de email, senha e CPF
+Implementação de login com geração de token JWT
+Cria middleware de autenticação
+Configuração do Prisma com schema de banco de dados
+Adicionado rotas protegidas
+Criação de 4 CRUDs Usuários, Cursos, Módulos e Aulas
